@@ -1,5 +1,5 @@
 import React from "react";
-import { ReactDOM } from "react-dom";
+import ReactDOM from "react-dom";
 import "./index.css";
 
 // countの初期値として、1~10までのランダムな数値を生成
