@@ -1,84 +1,73 @@
-import React,{useReducer} from "react";
+import React, { useReducer, useEffect } from "react";
 import ReactDOM from "react-dom";
-import Button from "@material-ui/core/Button";
-import ButtonGroup from "@material-ui/core/ButtonGroup";
 import "./index.css";
+import axios from "axios";
 
-
-// //stateが複数の場合
-
+//initialStateを作成
 const initialState = {
-  firstCounter: 0,
-  secondCounter: 100,
-};
-//reducer関数を作成
-//countStateとactionを渡して、新しいcountStateを返すように実装する
-const reducerFunc = (countState, action) => {
-  //reducer関数にincrement、increment、reset処理を書く
-  //どの処理を渡すかはactionを渡すことによって判断する
-  //switch文のactionをaction.typeに変更
-  //firstCounter、secondCounter用にcaseを設定
-  //複数のcounterStateを持っている場合は、更新前のcounterStateを展開し、オブジェクトのマージを行う
-  switch (action.type) {
-    case "increment1":
-      return {
-        ...countState,
-        firstCounter: countState.firstCounter + action.value,
-      };
-    case "decrement1":
-      return {
-        ...countState,
-        firstCounter: countState.firstCounter - action.value,
-      };
-    case "increment2":
-      return {
-        ...countState,
-        secondCounter: countState.secondCounter + action.value,
-      };
-    case "decrement2":
-      return {
-        ...countState,
-        secondCounter: countState.secondCounter - action.value,
-      };
-    case "reset1":
-      return { ...countState, firstCounter: initialState.firstCounter };
-    case "reset2":
-      return { ...countState, secondCounter: initialState.secondCounter };
-    default:
-      return countState;
-  }
-};
-const Counter = () => {
-  //作成したreducerFunc関数とcountStateをuseReducerに渡す
-  //useReducerはcountStateとdispatchをペアで返すので、それぞれを分割代入
-  const [count, dispatch] = useReducer(reducerFunc, initialState);
-  //カウント数とそれぞれのactionを実行する<Button/>を設置する
-  //dispatchで渡しているactionをオブジェクトに変更して、typeとvalueを設定
-  return (
-    <>
-      <h2>カウント：{count.firstCounter}</h2>
-      <ButtonGroup color="primary" aria-label="outlined primary button group">
-        <Button onClick={() => dispatch({ type: "increment1", value: 1 })}>
-          increment1
-        </Button>
-        <Button onClick={() => dispatch({ type: "decrement1", value: 1 })}>
-          decrement1
-        </Button>
-        <Button onClick={() => dispatch({ type: "reset1" })}>reset</Button>
-      </ButtonGroup>
-      <h2>カウント2：{count.secondCounter}</h2>
-      <ButtonGroup color="secondary" aria-label="outlined primary button group">
-        <Button onClick={() => dispatch({ type: "increment2", value: 100 })}>
-          increment2
-        </Button>
-        <Button onClick={() => dispatch({ type: "decrement2", value: 100 })}>
-          decrement2
-        </Button>
-        <Button onClick={() => dispatch({ type: "reset2" })}>reset</Button>
-      </ButtonGroup>
-    </>
-  );
-};
+  isLoading: true,
+  isError: '',
+  post: {}
+}
 
-export default Counter;
-ReactDOM.render(<Counter />, document.getElementById("root"));
+//reducerを作成、stateとactionを渡して、新しいstateを返すように実装
+const dataFetchReducer = (dataState, action) =>{
+  switch(action.type) {
+    case 'FETCH_INIT':
+    return {
+      isLoading: true,
+      post: {},
+      isError: ''
+    }
+//データの取得に成功した場合
+//成功なので、isErrorは''
+//postにはactionで渡されるpayloadを代入
+    case 'FETCH_SUCCESS':
+    return {
+      isLoading: false,
+      isError: '',
+      post: action.payload,
+    }
+//データの取得に失敗した場合
+//成功なので、isErrorにエラーメッセージを設定
+    case 'FETCH_ERROR':
+    return {
+      isLoading: false,
+      post: {},
+      isError: '読み込みに失敗しました'
+    }
+//defaultではそのまま渡ってきたstateを返しておく
+    default:
+    return dataState
+  }
+}
+const App = () => {
+//initialStateとreducer関数をuseReducer()に読み、stateとdispatchの準備
+  const [dataState, dispatch] = useReducer(dataFetchReducer, initialState)
+
+  useEffect(()=>{
+//http getリクエストをurlを書く
+    axios
+    .get('https://jsonplaceholder.typicode.com/posts/100')
+//リクエストに成功した場合
+    .then(res =>{
+//dispatch関数を呼び、type:には'FETCH_SUCCESS'、payloadには受け取ったデータを代入する
+      dispatch({type:'FETCH_SUCCESS', payload: res.data})
+    })
+//リクエストに失敗した場合catchの中に入ってくる
+    .catch(err => {
+      dispatch({type: 'FETCH_ERROR'})
+    })
+  })
+  return (
+    <div className='App'>
+{/* //Loadingが終わったら記事のタイトルを表示 */}
+      <h3>{dataState.isLoading ? 'Loading...': dataState.post.title}</h3>
+{/* //エラーがあった場合の処理 */}
+      <p>{dataState.isError ? dataState.isError : null}</p>
+    </div>
+  )
+}
+
+export default App;
+ReactDOM.render(<App />, document.getElementById("root"));
