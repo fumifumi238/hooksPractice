@@ -1,39 +1,38 @@
-import React, { useRef} from "react";
+import React, { useMemo, useState} from "react";
 import ReactDOM from "react-dom";
 import "./index.css";
 
-
 const App = () => {
-  const inputEl = useRef(null);
-  const handleClick = () => {
-    inputEl.current.focus();
-    console.log("inputEl.current:", inputEl.current);
-    //inputEl.current: <input type="text">
-  };
+  const [count01, setCount01] = useState(0);
+  const [count02, setCount02] = useState(0);
+
+  const result01 = () => setCount01(count01 + 1);
+  const result02 = () => setCount02(count02 + 1);
+
+  // const square = () => {
+  //   let i = 0
+  //   while (i < 2) i++
+  //   return count02 * count02
+  // }
+
+  const square = useMemo(() => {
+    let i = 0;
+    while (i < 200) i++;
+    return count02 * count02;
+  }, [count02]);
+
   return (
     <>
-      <input ref={inputEl} type="text" />
-      <button onClick={handleClick}>入力エリアをフォーカスする</button>
+      <div>result01: {count01}</div>
+      <div>result02: {count02}</div>
+      {/* <div>square: {square()}</div> */}
+      <div>square: {square}</div>
+      <button onClick={result01}>increment</button>
+      <button onClick={result02}>increment</button>
     </>
   );
 };
 
-// useStateはstateの更新時に再レンダリングする。
-// const App = () => {
-//   const inputEl = useRef(null);
-//   const [text, setText] = useState("");
-//   const handleClick = () => {
-//     setText(inputEl.current.value);
-//   };
-//   console.log("レンダリング！！");
-//   return (
-//     <>
-//       <input ref={inputEl} type="text" />
-//       <button onClick={handleClick}>set text</button>
-//       <p>テキスト : {text}</p>
-//     </>
-//   );
-// };
 export default App;
 
 ReactDOM.render(<App />, document.getElementById("root"));
